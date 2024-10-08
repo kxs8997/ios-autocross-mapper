@@ -9,13 +9,22 @@ struct ContentView: View {
 
     var body: some View {
         VStack(spacing: 10) {
+            // GPS Accuracy Status Display
             HStack {
-                Text(locationManager.gpsAccuracyMessage)
+                Text("GPS Status: \(locationManager.gpsAccuracyMessage)")
                     .font(.subheadline)
                     .foregroundColor(locationManager.isGPSAccuracyGood ? .green : .red)
+                
+                Spacer()
+                
+                // Display GPS accuracy in meters
+                Text("Accuracy: \(String(format: "%.1f", locationManager.gpsAccuracyInMeters)) meters")
+                    .font(.subheadline)
+                    .foregroundColor(.gray)
 
                 Spacer()
 
+                // Save Button
                 Button(action: {
                     let chartName = generateChartName()
                     ChartManager.saveChart(name: chartName, coneLocations: locationManager.coneLocations, rotationAngle: rotationAngle)
@@ -31,6 +40,7 @@ struct ContentView: View {
             }
             .padding(.horizontal)
 
+            // Cone Type Selection Buttons
             VStack {
                 HStack {
                     Button(action: {
@@ -72,12 +82,13 @@ struct ContentView: View {
                 .padding()
             }
 
+            // Tagging and Deleting Cones
             VStack {
                 HStack {
+                    // Tag Cone Button
                     Button(action: {
                         locationManager.tagCone()
-                        // After tagging the first cone, mark it as tagged for auto-scrolling
-                        firstConeTagged = true
+                        firstConeTagged = true // After tagging the first cone, mark it as tagged for auto-scrolling
                     }) {
                         Text("Tag Cone")
                             .font(.subheadline)
@@ -89,6 +100,7 @@ struct ContentView: View {
                     }
                     .disabled(!locationManager.isGPSAccuracyGood)
 
+                    // Delete Last Cone Button
                     Button(action: {
                         locationManager.deleteLastCone()
                     }) {
@@ -104,7 +116,7 @@ struct ContentView: View {
                 .padding()
             }
 
-            // Add ScrollViewReader for programmatic scrolling
+            // ScatterPlotView with auto-scroll for the first tagged cone
             if let firstCone = locationManager.coneLocations.first?.location {
                 ScrollView([.horizontal, .vertical]) {
                     ScrollViewReader { proxy in
@@ -118,7 +130,6 @@ struct ContentView: View {
                         .padding()
                         .rotationEffect(.degrees(rotationAngle)) // Apply rotation effect to ScatterPlotView
                         .onChange(of: firstConeTagged) { newValue in
-                            // Auto-scroll to the first cone after it's tagged by index
                             if newValue {
                                 withAnimation {
                                     proxy.scrollTo(0, anchor: .center) // Scroll to the first cone's index
@@ -133,20 +144,19 @@ struct ContentView: View {
                     .padding()
             }
 
-            // Corrected string interpolation
+            // Zoom and Rotation Controls
             VStack(spacing: 10) {
                 Text("Zoom Level: \(String(format: "%.1f", zoomScale))x")
                     .font(.subheadline)
                 Slider(value: $zoomScale, in: 0.05...3.0, step: 0.1)
                     .padding(.horizontal)
 
-                // Add Rotation Slider
                 Text("Rotation Angle: \(Int(rotationAngle))°")
                     .font(.subheadline)
-                Slider(value: $rotationAngle, in: -180...180, step: 1) // Rotation slider
+                Slider(value: $rotationAngle, in: -180...180, step: 1)
                     .padding(.horizontal)
             }
-            .padding() // Ensure padding to keep the slider visible
+            .padding()
         }
         .padding()
         .background(Color.black)
