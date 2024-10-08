@@ -1,5 +1,6 @@
 import SwiftUI
 import CoreLocation
+
 struct SavedChartView: View {
     let chart: SavedChart
     @State var rotationAngle: Double
@@ -22,17 +23,17 @@ struct SavedChartView: View {
             )
 
             ScrollView([.horizontal, .vertical]) {
-                ScatterPlotView(
+                ScatterPlotViewSaved(
                     coneLocations: chart.coneData,
                     referenceLocation: firstConeLocation,
-                    rotationAngle: rotationAngle,
+                    rotationAngle: rotationAngle, // World rotation for saved chart
                     zoomScale: zoomScale // Pass zoom scale to ScatterPlotView
                 )
                 .frame(width: 1000, height: 1000) // Adjust the size based on your needs
                 .padding()
             }
 
-            // Zoom slider and rotation slider
+            // Zoom slider and world rotation slider
             VStack(spacing: 10) {
                 let zoomLevelText = String(format: "%.1f", zoomScale)
                 Text("Zoom Level: \(zoomLevelText)x")
@@ -41,10 +42,10 @@ struct SavedChartView: View {
                 Slider(value: $zoomScale, in: 0.05...3.0, step: 0.1) // Zoom slider
                     .padding(.horizontal)
 
-                Text("Rotation Angle: \(Int(rotationAngle))°")
+                Text("Rotate World: \(Int(rotationAngle))°")
                     .font(.subheadline)
 
-                Slider(value: $rotationAngle, in: -180...180, step: 1) // Rotation slider
+                Slider(value: $rotationAngle, in: -180...180, step: 1) // World rotation slider
                     .padding(.horizontal)
             }
             .padding()

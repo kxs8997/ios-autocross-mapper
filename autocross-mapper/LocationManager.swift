@@ -8,9 +8,9 @@ class LocationManager: NSObject, ObservableObject {
     @Published var location: CLLocation? // Current location
     @Published var gpsAccuracyMessage: String = "Not Ready"
     @Published var isGPSAccuracyGood: Bool = false
-    @Published var gpsAccuracyInMeters: CLLocationAccuracy = 0.0 // Accuracy in meters
+    @Published var gpsAccuracyInMeters: CLLocationAccuracy = 0.0 // New property to track accuracy in meters
     @Published var coneLocations: [Cone] = [] // List of tagged cone locations
-    @Published var selectedConeType: ConeType = .single // Default to single cone
+    @Published var selectedConeType: ConeType = .single // Default to pointer cone
     @Published var outdoorAccuracyThreshold: CLLocationAccuracy = 15.0 // Default threshold value
 
     override init() {
@@ -21,21 +21,13 @@ class LocationManager: NSObject, ObservableObject {
         locationManager.startUpdatingLocation()
     }
 
-    func tagCone() {
-        guard let currentLocation = location else {
-            print("Location not available.")
-            return
-        }
-
-        if isGPSAccuracyGood {
-            let newCone = Cone(location: currentLocation.coordinate, type: selectedConeType)
-            coneLocations.append(newCone)
-            print("Cone tagged at: \(currentLocation.coordinate.latitude), \(currentLocation.coordinate.longitude)")
-        } else {
-            print("GPS accuracy not sufficient to tag a cone.")
-        }
+    func tagCone(location: CLLocationCoordinate2D, rotation: Double) {
+        let newCone = Cone(location: location, type: selectedConeType, rotation: rotation)
+        coneLocations.append(newCone)
+        print("Cone tagged at: \(location.latitude), \(location.longitude) with rotation: \(rotation)°")
     }
 
+    // Function to delete the last tagged cone
     func deleteLastCone() {
         if !coneLocations.isEmpty {
             coneLocations.removeLast()
@@ -43,15 +35,27 @@ class LocationManager: NSObject, ObservableObject {
         }
     }
 
+    // Update the rotation of a cone at a specific index
+    func updateConeRotation(at index: Int, rotation: Double) {
+        guard index >= 0 && index < coneLocations.count else { return }
+
+        // Update the rotation of the selected cone
+        var cone = coneLocations[index]
+        cone.rotation = rotation
+        coneLocations[index] = cone
+        print("Cone at index \(index) updated with new rotation: \(rotation)°")
+    }
+
     func calculateDistance(from: CLLocationCoordinate2D, to: CLLocationCoordinate2D) -> CLLocationDistance {
         let startLocation = CLLocation(latitude: from.latitude, longitude: from.longitude)
         let endLocation = CLLocation(latitude: to.latitude, longitude: to.longitude)
         let distance = startLocation.distance(from: endLocation)
-        return distance // Distance in meters
+        return distance
     }
 }
 
 extension LocationManager: CLLocationManagerDelegate {
+
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let newLocation = locations.last else { return }
         location = newLocation

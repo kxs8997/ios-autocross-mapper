@@ -1,11 +1,11 @@
 import SwiftUI
 import CoreLocation
 
-struct ScatterPlotView: View {
+struct ScatterPlotViewSaved: View {
     let coneLocations: [Cone]
     let referenceLocation: CLLocationCoordinate2D
-    let rotationAngle: Double
-    let zoomScale: CGFloat // Pass zoomScale into ScatterPlotView
+    let rotationAngle: Double // Rotation for the entire world
+    let zoomScale: CGFloat
 
     func convertToMeters(location: CLLocationCoordinate2D, reference: CLLocationCoordinate2D) -> CGPoint {
         let latitudeDifference = location.latitude - reference.latitude
@@ -27,13 +27,10 @@ struct ScatterPlotView: View {
                 ForEach(Array(coneLocations.enumerated()), id: \.offset) { index, cone in
                     let point = convertToMeters(location: cone.location, reference: referenceLocation)
 
-                    // Directly apply zoom scaling without normalization
+                    // Apply zoom scaling
                     let normalizedX = point.x * zoomScale + chartWidth / 2
                     let normalizedY = point.y * zoomScale + chartHeight / 2
                     let coneSize = 5 * zoomScale // Scale cone size with zoom
-
-                    // Print the position for debugging
-                    // print("Cone \(index) position: (\(normalizedX), \(normalizedY))")
 
                     if index < 2 {
                         // First two cones are always starting cones
@@ -42,21 +39,9 @@ struct ScatterPlotView: View {
                             .frame(width: coneSize, height: coneSize)
                             .position(CGPoint(x: normalizedX, y: normalizedY))
                     } else {
-                        // Handle other cone types (pointer cones and single cones)
+                        // Handle pointer and single cones
                         switch cone.type {
-                        case .leftPointer:
-                            Circle()
-                                .fill(Color.orange)
-                                .frame(width: coneSize, height: coneSize)
-                                .overlay(
-                                    Rectangle()
-                                        .fill(Color.orange)
-                                        .frame(width: 20 * zoomScale, height: 3 * zoomScale)
-                                        .offset(x: -15 * zoomScale)
-                                )
-                                .position(CGPoint(x: normalizedX, y: normalizedY))
-
-                        case .rightPointer:
+                        case .pointer:
                             Circle()
                                 .fill(Color.orange)
                                 .frame(width: coneSize, height: coneSize)
@@ -65,6 +50,7 @@ struct ScatterPlotView: View {
                                         .fill(Color.orange)
                                         .frame(width: 20 * zoomScale, height: 3 * zoomScale)
                                         .offset(x: 15 * zoomScale)
+                                        .rotationEffect(.degrees(cone.rotation), anchor: .center) // Rotate the dash with the cone's own rotation
                                 )
                                 .position(CGPoint(x: normalizedX, y: normalizedY))
 
@@ -75,12 +61,12 @@ struct ScatterPlotView: View {
                                 .position(CGPoint(x: normalizedX, y: normalizedY))
 
                         default:
-                            EmptyView() // Return a valid view even for unexpected cases
+                            EmptyView()
                         }
                     }
                 }
             }
-            .rotationEffect(.degrees(rotationAngle)) // Apply rotation
+            .rotationEffect(.degrees(rotationAngle)) // Apply world rotation to the entire plot
         }
     }
 }
