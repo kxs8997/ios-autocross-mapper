@@ -21,24 +21,17 @@ struct ContentView: View {
                 Text("Accuracy: \(String(format: "%.1f", locationManager.gpsAccuracyInMeters)) meters")
                     .font(.subheadline)
                     .foregroundColor(.gray)
-
-                Spacer()
-
-                // Save Button
-                Button(action: {
-                    let chartName = generateChartName()
-                    ChartManager.saveChart(name: chartName, coneLocations: locationManager.coneLocations, rotationAngle: rotationAngle)
-                }) {
-                    Text("Save")
-                        .font(.subheadline)
-                        .padding(4)
-                        .frame(width: 60, height: 25)
-                        .background(Color.blue)
-                        .foregroundColor(.white)
-                        .cornerRadius(8)
-                }
             }
             .padding(.horizontal)
+
+            // Outdoor Accuracy Threshold Slider
+            VStack {
+                Text("Set Outdoor Accuracy Threshold: \(String(format: "%.1f", locationManager.outdoorAccuracyThreshold)) meters")
+                    .font(.subheadline)
+
+                Slider(value: $locationManager.outdoorAccuracyThreshold, in: 1...50, step: 1) // Slider to adjust accuracy threshold
+                    .padding(.horizontal)
+            }
 
             // Cone Type Selection Buttons
             VStack {

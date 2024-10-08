@@ -8,11 +8,10 @@ class LocationManager: NSObject, ObservableObject {
     @Published var location: CLLocation? // Current location
     @Published var gpsAccuracyMessage: String = "Not Ready"
     @Published var isGPSAccuracyGood: Bool = false
-    @Published var gpsAccuracyInMeters: CLLocationAccuracy = 0.0 // New property to track accuracy in meters
+    @Published var gpsAccuracyInMeters: CLLocationAccuracy = 0.0 // Accuracy in meters
     @Published var coneLocations: [Cone] = [] // List of tagged cone locations
     @Published var selectedConeType: ConeType = .single // Default to single cone
-
-    private let outdoorAccuracyThreshold: CLLocationAccuracy = 15.0
+    @Published var outdoorAccuracyThreshold: CLLocationAccuracy = 15.0 // Default threshold value
 
     override init() {
         super.init()
@@ -48,12 +47,11 @@ class LocationManager: NSObject, ObservableObject {
         let startLocation = CLLocation(latitude: from.latitude, longitude: from.longitude)
         let endLocation = CLLocation(latitude: to.latitude, longitude: to.longitude)
         let distance = startLocation.distance(from: endLocation)
-        return distance
+        return distance // Distance in meters
     }
 }
 
 extension LocationManager: CLLocationManagerDelegate {
-
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let newLocation = locations.last else { return }
         location = newLocation
@@ -61,7 +59,7 @@ extension LocationManager: CLLocationManagerDelegate {
         // Update GPS accuracy in meters
         gpsAccuracyInMeters = newLocation.horizontalAccuracy
 
-        // Check if the accuracy is sufficient for outdoor use
+        // Check if the accuracy is sufficient for outdoor use based on the adjustable threshold
         if newLocation.horizontalAccuracy <= outdoorAccuracyThreshold {
             gpsAccuracyMessage = "OK"
             isGPSAccuracyGood = true
@@ -70,7 +68,7 @@ extension LocationManager: CLLocationManagerDelegate {
             isGPSAccuracyGood = false
         }
 
-        print("Updated location: \(newLocation.coordinate.latitude), \(newLocation.coordinate.longitude) | Accuracy: \(newLocation.horizontalAccuracy)m")
+        print("Updated location: \(newLocation.coordinate.latitude), \(newLocation.coordinate.longitude) | Accuracy: \(newLocation.horizontalAccuracy)m | Threshold: \(outdoorAccuracyThreshold)m")
     }
 
     func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
