@@ -17,33 +17,23 @@ struct ScatterPlotView: View {
         return CGPoint(x: CGFloat(deltaX), y: CGFloat(deltaY))
     }
 
-    // Find the maximum distance between cones for normalization
-    func calculateMaxDistance(cones: [Cone], reference: CLLocationCoordinate2D) -> CGFloat {
-        var maxDistance: CGFloat = 0
-        for cone in cones {
-            let point = convertToMeters(location: cone.location, reference: reference)
-            let distance = sqrt(point.x * point.x + point.y * point.y)
-            maxDistance = max(maxDistance, distance)
-        }
-        return maxDistance
-    }
-
     var body: some View {
         GeometryReader { geometry in
             let chartWidth = geometry.size.width
             let chartHeight = geometry.size.height
 
-            let maxDistance = calculateMaxDistance(cones: coneLocations, reference: referenceLocation)
-
             ZStack {
-                ForEach(0..<coneLocations.count, id: \.self) { index in
-                    let cone = coneLocations[index]
+                // Iterate over coneLocations using the index
+                ForEach(Array(coneLocations.enumerated()), id: \.offset) { index, cone in
                     let point = convertToMeters(location: cone.location, reference: referenceLocation)
 
-                    // Normalize the positions based on the maximum distance and then apply zoom
-                    let normalizedX = (point.x / maxDistance) * (chartWidth / 2) * zoomScale + chartWidth / 2
-                    let normalizedY = (point.y / maxDistance) * (chartHeight / 2) * zoomScale + chartHeight / 2
-                    let coneSize = 10 * zoomScale // Scale cone size with zoom
+                    // Directly apply zoom scaling without normalization
+                    let normalizedX = point.x * zoomScale + chartWidth / 2
+                    let normalizedY = point.y * zoomScale + chartHeight / 2
+                    let coneSize = 5 * zoomScale // Scale cone size with zoom
+
+                    // Print the position for debugging
+                    // print("Cone \(index) position: (\(normalizedX), \(normalizedY))")
 
                     if index < 2 {
                         // First two cones are always starting cones
@@ -83,13 +73,9 @@ struct ScatterPlotView: View {
                                 .fill(Color.orange)
                                 .frame(width: coneSize, height: coneSize)
                                 .position(CGPoint(x: normalizedX, y: normalizedY))
-                        
-                        // Handle all other cases with a default
+
                         default:
-                            Circle()
-                                .fill(Color.gray)
-                                .frame(width: coneSize, height: coneSize)
-                                .position(CGPoint(x: normalizedX, y: normalizedY))
+                            EmptyView() // Return a valid view even for unexpected cases
                         }
                     }
                 }

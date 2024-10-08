@@ -101,22 +101,49 @@ struct ContentView: View {
                 .padding()
             }
 
-            // Check if cones are available before passing firstCone
-            if let firstCone = locationManager.coneLocations.first?.location {
-                ScrollView([.horizontal, .vertical]) {
-                    ScatterPlotView(
-                        coneLocations: locationManager.coneLocations,
-                        referenceLocation: firstCone,
-                        rotationAngle: rotationAngle,
-                        zoomScale: zoomScale
-                    )
-                    .frame(width: 1000, height: 1000)
-                    .padding()
+            // Add ScrollViewReader for programmatic scrolling
+            ScrollView([.horizontal, .vertical]) {
+                ScrollViewReader { proxy in
+                    ZStack {
+                        if let firstCone = locationManager.coneLocations.first?.location {
+                            ScatterPlotView(
+                                coneLocations: locationManager.coneLocations,
+                                referenceLocation: firstCone,
+                                rotationAngle: rotationAngle,
+                                zoomScale: zoomScale
+                            )
+                            .frame(width: 1000, height: 1000) // Adjust the frame size based on your needs
+                            .padding()
+                        } else {
+                            Text("No cones tagged yet.")
+                                .font(.subheadline)
+                                .padding()
+                        }
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity) // Ensure the ZStack takes up available space
+                    .onAppear {
+                        // Scroll to center when the view appears
+                        proxy.scrollTo("center", anchor: .center)
+                    }
+
+                    // Button to scroll to the center of the chart
+                    Button(action: {
+                        // Scroll to the center of the chart when button is pressed
+                        withAnimation {
+                            proxy.scrollTo("center", anchor: .center)
+                        }
+                    }) {
+                        Text("Scroll to Center")
+                            .font(.subheadline)
+                            .padding(4)
+                            .frame(maxWidth: .infinity)
+                            .background(Color.blue)
+                            .foregroundColor(.white)
+                            .cornerRadius(8)
+                    }
+                    .padding(.horizontal)
+                    .id("center") // Mark this position as "center" to scroll to it
                 }
-            } else {
-                Text("No cones tagged yet.")
-                    .font(.subheadline)
-                    .padding()
             }
 
             // Corrected string interpolation
@@ -124,6 +151,12 @@ struct ContentView: View {
                 Text("Zoom Level: \(String(format: "%.1f", zoomScale))x")
                     .font(.subheadline)
                 Slider(value: $zoomScale, in: 0.05...3.0, step: 0.1)
+                    .padding(.horizontal)
+
+                // Add Rotation Slider
+                Text("Rotation Angle: \(Int(rotationAngle))°")
+                    .font(.subheadline)
+                Slider(value: $rotationAngle, in: -180...180, step: 1) // Rotation slider
                     .padding(.horizontal)
             }
             .padding() // Ensure padding to keep the slider visible
