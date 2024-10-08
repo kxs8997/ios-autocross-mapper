@@ -5,6 +5,7 @@ struct ContentView: View {
     @StateObject var locationManager = LocationManager()
     @State private var rotationAngle: Double = 0
     @State private var zoomScale: CGFloat = 1.0
+    @State private var firstConeTagged = false // Track if the first cone has been tagged
 
     var body: some View {
         VStack(spacing: 10) {
@@ -75,6 +76,8 @@ struct ContentView: View {
                 HStack {
                     Button(action: {
                         locationManager.tagCone()
+                        // After tagging the first cone, mark it as tagged for auto-scrolling
+                        firstConeTagged = true
                     }) {
                         Text("Tag Cone")
                             .font(.subheadline)
@@ -102,48 +105,32 @@ struct ContentView: View {
             }
 
             // Add ScrollViewReader for programmatic scrolling
-            ScrollView([.horizontal, .vertical]) {
-                ScrollViewReader { proxy in
-                    ZStack {
-                        if let firstCone = locationManager.coneLocations.first?.location {
-                            ScatterPlotView(
-                                coneLocations: locationManager.coneLocations,
-                                referenceLocation: firstCone,
-                                rotationAngle: rotationAngle,
-                                zoomScale: zoomScale
-                            )
-                            .frame(width: 1000, height: 1000) // Adjust the frame size based on your needs
-                            .padding()
-                        } else {
-                            Text("No cones tagged yet.")
-                                .font(.subheadline)
-                                .padding()
+            if let firstCone = locationManager.coneLocations.first?.location {
+                ScrollView([.horizontal, .vertical]) {
+                    ScrollViewReader { proxy in
+                        ScatterPlotView(
+                            coneLocations: locationManager.coneLocations,
+                            referenceLocation: firstCone,
+                            rotationAngle: rotationAngle,
+                            zoomScale: zoomScale
+                        )
+                        .frame(width: 1000, height: 1000)
+                        .padding()
+                        .rotationEffect(.degrees(rotationAngle)) // Apply rotation effect to ScatterPlotView
+                        .onChange(of: firstConeTagged) { newValue in
+                            // Auto-scroll to the first cone after it's tagged by index
+                            if newValue {
+                                withAnimation {
+                                    proxy.scrollTo(0, anchor: .center) // Scroll to the first cone's index
+                                }
+                            }
                         }
                     }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity) // Ensure the ZStack takes up available space
-                    .onAppear {
-                        // Scroll to center when the view appears
-                        proxy.scrollTo("center", anchor: .center)
-                    }
-
-                    // Button to scroll to the center of the chart
-                    Button(action: {
-                        // Scroll to the center of the chart when button is pressed
-                        withAnimation {
-                            proxy.scrollTo("center", anchor: .center)
-                        }
-                    }) {
-                        Text("Scroll to Center")
-                            .font(.subheadline)
-                            .padding(4)
-                            .frame(maxWidth: .infinity)
-                            .background(Color.blue)
-                            .foregroundColor(.white)
-                            .cornerRadius(8)
-                    }
-                    .padding(.horizontal)
-                    .id("center") // Mark this position as "center" to scroll to it
                 }
+            } else {
+                Text("No cones tagged yet.")
+                    .font(.subheadline)
+                    .padding()
             }
 
             // Corrected string interpolation
