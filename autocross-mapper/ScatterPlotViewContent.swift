@@ -40,7 +40,7 @@ struct ScatterPlotViewContent: View {
                     // Apply zoom scaling
                     let normalizedX = point.x * zoomScale + chartWidth / 2
                     let normalizedY = point.y * zoomScale + chartHeight / 2
-                    let coneSize = 5 * zoomScale // Scale cone size with zoom
+                    let coneSize = 2.5 * zoomScale // Scale cone size with zoom
 
                     if index < 2 {
                         // First two cones are always starting cones
