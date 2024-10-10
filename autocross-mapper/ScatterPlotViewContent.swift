@@ -7,7 +7,7 @@ struct ScatterPlotViewContent: View {
     let rotationAngle: Double
     let zoomScale: CGFloat
     let onSelectCone: (Int) -> Void
-    let onDeselectCone: () -> Void // New closure to handle tap outside cones
+    let onDeselectCone: () -> Void
 
     func convertToMeters(location: CLLocationCoordinate2D, reference: CLLocationCoordinate2D) -> CGPoint {
         let latitudeDifference = location.latitude - reference.latitude
@@ -33,8 +33,8 @@ struct ScatterPlotViewContent: View {
                         onDeselectCone() // Call the deselect closure if tapped outside
                     }
 
-                // Iterate over coneLocations using the index
-                ForEach(Array(coneLocations.enumerated()), id: \.offset) { index, cone in
+                // Iterate over coneLocations using .enumerated()
+                ForEach(Array(coneLocations.enumerated()), id: \.0) { (index, cone) in
                     let point = convertToMeters(location: cone.location, reference: referenceLocation)
 
                     // Apply zoom scaling
@@ -52,20 +52,23 @@ struct ScatterPlotViewContent: View {
                         // Handle pointer and single cones
                         switch cone.type {
                         case .pointer:
-                            Circle()
-                                .fill(Color.orange)
-                                .frame(width: coneSize, height: coneSize)
-                                .overlay(
-                                    Rectangle()
-                                        .fill(Color.orange)
-                                        .frame(width: 20 * zoomScale, height: 3 * zoomScale)
-                                        .offset(x: 15 * zoomScale)
-                                        .rotationEffect(.degrees(cone.rotation), anchor: .center) // Rotate the dash with the cone's own rotation
-                                )
-                                .position(CGPoint(x: normalizedX, y: normalizedY))
-                                .onTapGesture {
-                                    onSelectCone(index) // Call the select closure
-                                }
+                            ZStack {
+                                // Circle representing the pointer cone
+                                Circle()
+                                    .fill(Color.orange)
+                                    .frame(width: coneSize, height: coneSize)
+
+                                // The dash (rectangle) inside the pointer cone
+                                Rectangle()
+                                    .fill(Color.orange)
+                                    .frame(width: 10 * zoomScale, height: 1.5 * zoomScale) // Smaller rectangle size
+                                    .offset(x: 5 * zoomScale) // Adjust offset to fit inside the circle
+                                    .rotationEffect(.degrees(cone.rotation), anchor: .center) // Rotate the dash
+                            }
+                            .position(CGPoint(x: normalizedX, y: normalizedY)) // Position the entire pointer cone
+                            .onTapGesture {
+                                onSelectCone(index) // Call the select closure
+                            }
 
                         case .single:
                             Circle()
@@ -73,7 +76,7 @@ struct ScatterPlotViewContent: View {
                                 .frame(width: coneSize, height: coneSize)
                                 .position(CGPoint(x: normalizedX, y: normalizedY))
                                 .onTapGesture {
-                                    onDeselectCone() // Deselect if single cone is tapped
+                                    onSelectCone(index) // Call the select closure
                                 }
 
                         default:

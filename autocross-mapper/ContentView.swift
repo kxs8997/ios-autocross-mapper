@@ -161,7 +161,7 @@ struct ContentView: View {
             VStack(spacing: 10) {
                 Text("Zoom Level: \(String(format: "%.1f", zoomScale))x")
                     .font(.subheadline)
-                Slider(value: $zoomScale, in: 0.05...3.0, step: 0.1)
+                Slider(value: $zoomScale, in: 0.05...8.0, step: 0.1)
                     .padding(.horizontal)
             }
             .padding()
