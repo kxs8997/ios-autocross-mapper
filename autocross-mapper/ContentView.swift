@@ -126,6 +126,7 @@ struct ContentView: View {
                             referenceLocation: firstCone,
                             rotationAngle: worldRotation, // World rotation
                             zoomScale: zoomScale,
+                            currentLocation: locationManager.location?.coordinate, // Pass current location to ScatterPlotView
                             onSelectCone: { index in
                                 let cone = locationManager.coneLocations[index]
                                 if cone.type == .pointer {
@@ -199,6 +200,7 @@ struct ContentView: View {
     }
 
     // Function to tag a cone (pointer or single)
+    // Function to tag a cone (pointer or single)
     func tagCone() {
         guard let currentLocation = locationManager.location else {
             print("No GPS location available.")
@@ -212,13 +214,9 @@ struct ContentView: View {
             return
         }
 
-        // Proceed with placing the selected cone (pointer or single)
+        // Use the blue dot's current location to tag the pointer cone
         if locationManager.selectedConeType == .pointer {
-            let distance: Double = 0.0 // Offset distance in meters from the starting cone
-            let startingCone = locationManager.coneLocations.first!.location
-            let newLocation = offsetLocation(from: startingCone, angle: pointerConeRotation, distance: distance)
-
-            let newCone = Cone(location: newLocation, type: .pointer, rotation: pointerConeRotation)
+            let newCone = Cone(location: currentLocation.coordinate, type: .pointer, rotation: pointerConeRotation) // Use current location
             locationManager.coneLocations.append(newCone)
         } else {
             let newCone = Cone(location: currentLocation.coordinate, type: .single)
@@ -226,6 +224,7 @@ struct ContentView: View {
             pointerConeSelected = false // Deselect pointer cone when a single cone is tagged
         }
     }
+
 
     // Function to update rotation for an already tagged pointer cone
     func updatePointerConeRotation(for index: Int) {

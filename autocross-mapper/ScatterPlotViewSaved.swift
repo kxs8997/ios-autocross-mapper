@@ -30,7 +30,7 @@ struct ScatterPlotViewSaved: View {
                     // Apply zoom scaling
                     let normalizedX = point.x * zoomScale + chartWidth / 2
                     let normalizedY = point.y * zoomScale + chartHeight / 2
-                    let coneSize = 5 * zoomScale // Scale cone size with zoom
+                    let coneSize = 2.5 * zoomScale // Scale cone size with zoom
 
                     if index < 2 {
                         // First two cones are always starting cones
@@ -48,8 +48,8 @@ struct ScatterPlotViewSaved: View {
                                 .overlay(
                                     Rectangle()
                                         .fill(Color.orange)
-                                        .frame(width: 20 * zoomScale, height: 3 * zoomScale)
-                                        .offset(x: 15 * zoomScale)
+                                        .frame(width: 5 * zoomScale, height: 1.5 * zoomScale)
+                                        .offset(x: 3 * zoomScale)
                                         .rotationEffect(.degrees(cone.rotation), anchor: .center) // Rotate the dash with the cone's own rotation
                                 )
                                 .position(CGPoint(x: normalizedX, y: normalizedY))

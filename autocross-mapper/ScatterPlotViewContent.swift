@@ -6,9 +6,11 @@ struct ScatterPlotViewContent: View {
     let referenceLocation: CLLocationCoordinate2D
     let rotationAngle: Double
     let zoomScale: CGFloat
+    let currentLocation: CLLocationCoordinate2D? // New: Current location to be shown as a blue dot
     let onSelectCone: (Int) -> Void
     let onDeselectCone: () -> Void
 
+    // Convert lat/lon differences to meters using a reference location
     func convertToMeters(location: CLLocationCoordinate2D, reference: CLLocationCoordinate2D) -> CGPoint {
         let latitudeDifference = location.latitude - reference.latitude
         let longitudeDifference = location.longitude - reference.longitude
@@ -53,21 +55,19 @@ struct ScatterPlotViewContent: View {
                         switch cone.type {
                         case .pointer:
                             ZStack {
-                                // Circle representing the pointer cone
                                 Circle()
                                     .fill(Color.orange)
                                     .frame(width: coneSize, height: coneSize)
 
-                                // The dash (rectangle) inside the pointer cone
                                 Rectangle()
                                     .fill(Color.orange)
-                                    .frame(width: 10 * zoomScale, height: 1.5 * zoomScale) // Smaller rectangle size
-                                    .offset(x: 5 * zoomScale) // Adjust offset to fit inside the circle
-                                    .rotationEffect(.degrees(cone.rotation), anchor: .center) // Rotate the dash
+                                    .frame(width: 5 * zoomScale, height: 1.5 * zoomScale)
+                                    .offset(x: 3 * zoomScale)
+                                    .rotationEffect(.degrees(cone.rotation), anchor: .center)
                             }
-                            .position(CGPoint(x: normalizedX, y: normalizedY)) // Position the entire pointer cone
+                            .position(CGPoint(x: normalizedX, y: normalizedY))
                             .onTapGesture {
-                                onSelectCone(index) // Call the select closure
+                                onSelectCone(index)
                             }
 
                         case .single:
@@ -76,7 +76,7 @@ struct ScatterPlotViewContent: View {
                                 .frame(width: coneSize, height: coneSize)
                                 .position(CGPoint(x: normalizedX, y: normalizedY))
                                 .onTapGesture {
-                                    onSelectCone(index) // Call the select closure
+                                    onSelectCone(index)
                                 }
 
                         default:
@@ -84,8 +84,20 @@ struct ScatterPlotViewContent: View {
                         }
                     }
                 }
+
+                // Add the blue dot for the current location
+                if let currentLocation = currentLocation {
+                    let currentPoint = convertToMeters(location: currentLocation, reference: referenceLocation)
+                    let normalizedX = currentPoint.x * zoomScale + chartWidth / 2
+                    let normalizedY = currentPoint.y * zoomScale + chartHeight / 2
+
+                    Circle()
+                        .fill(Color.blue) // Blue dot for current location
+                        .frame(width: 2 * zoomScale, height: 2 * zoomScale)
+                        .position(CGPoint(x: normalizedX, y: normalizedY))
+                }
             }
-            .rotationEffect(.degrees(rotationAngle)) // Apply world rotation to the entire plot
+            .rotationEffect(.degrees(rotationAngle))
         }
     }
 }
